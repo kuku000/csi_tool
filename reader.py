@@ -1,15 +1,6 @@
 from CSIKit.reader import get_reader
 from CSIKit.util import csitools
 import numpy as np
-
-# my_reader = get_reader(r"C:\Users\keng-tse\Desktop\nexmon_csi-master\utils\matlab\test2.pcap")
-# print(my_reader)
-# csi_data = my_reader.read_file(r"C:\Users\keng-tse\Desktop\nexmon_csi-master\utils\matlab\test2.pcap")
-# csi_matrix, no_frames, no_subcarriers = csitools.get_CSI(csi_data)
-# print(csi_matrix)
-# print(csi_matrix.shape)
-# print(no_frames)
-
 class Csi_Reader():
     def __init__(self):
 
@@ -19,6 +10,7 @@ class Csi_Reader():
         try:
             my_reader = get_reader(path)
             csi_data = my_reader.read_file(path)
+            print(len(csi_data.frames))
 
         except Exception as err:
             print(f"Unexpected {err=}, {type(err)=}")
@@ -29,6 +21,10 @@ class Csi_Reader():
 
     def get_csi_matrix(self, path, csi_type = "amplitude"):
         csi_data = self.read(path)
+        #print(csi_data.timestamps)
+        #a = csi_data.get_metadata()
+        #print(a.chipset)
+      
         if csi_type == "original":
             csi_matrix, no_frames, no_subcarriers = csitools.get_CSI(csi_data, "original")
         elif csi_type == "amplitude":
@@ -40,5 +36,5 @@ class Csi_Reader():
         
 
 
-csi_matrix, no_frames, no_subcarriers = Csi_Reader().get_csi_matrix(r"C:\Users\keng-tse\Desktop\nexmon_csi-master\utils\matlab\test2.pcap")
+
 
