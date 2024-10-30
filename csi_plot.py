@@ -3,7 +3,7 @@ from reader import Csi_Reader
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
-#csi_matrix, no_frames, no_subcarriers = Csi_Reader().get_csi_matrix(r"C:\Users\keng-tse\Desktop\nexmon_csi-master\utils\matlab\pc1023\1023pc_5.pcap", "original")
+csi_matrix, no_frames, no_subcarriers = Csi_Reader().get_csi_matrix(r"C:\Users\keng-tse\Desktop\nexmon_csi-master\utils\matlab\pc1023\1023pc_0.pcap", "original")
 #csi_matrix, no_frames, no_subcarriers = Csi_Reader().get_csi_matrix(r"C:\Users\keng-tse\Desktop\nexmon_csi-master\utils\matlab\test20241021_40MHz_no_ping.pcap", "phase")
 #csi_matrix = np.fft.fftshift(csi_matrix, axes=1)
 #print(csi_matrix.shape)
@@ -112,6 +112,33 @@ def csi_preprocessor_amp(csi_matrix, no_frames, no_subcarriers, to_db=False, rem
 
     return csi_matrix_real
 
+def csi_preprocessor_phase(csi_matrix, no_frames, no_subcarriers, remove_sub=True, save_as_xlsx=True, path=""):
+    csi_matrix = csi_matrix.reshape((no_frames, no_subcarriers))
+    
+    if remove_sub:
+        csi_matrix, no_subcarriers_process = remove_null_and_pilot(csi_matrix, no_frames, no_subcarriers)
+    else:
+        no_subcarriers_process = no_subcarriers  # If not removing subcarriers, use original count
+
+    print( csi_matrix.shape)
+
+    csi_matrix_phase = np.angle(csi_matrix)
+
+    csi_matrix_phase = csi_matrix_phase[~(csi_matrix_phase == 0).all(axis=1)]
+    no_frames = csi_matrix_phase.shape[0]  # Update no_frames after removal
+
+    csi_matrix_phase = np.unwrap(csi_matrix_phase)
+
+
+    
+    if save_as_xlsx:
+        try:
+            csi_excel(csi_matrix_phase, no_frames, no_subcarriers_process, path)
+        except Exception as e:
+            raise ValueError("Saving error") from e
+
+    return csi_matrix_phase
+
 
 def csi_preprocessor_amp_phase(csi_matrix, no_frames, no_subcarriers, to_db = False, scaler=True, remove_sub=True, save_as_xlsx=True, path=""):
     #Reshape CSI matrix for processing
@@ -166,3 +193,4 @@ def csi_preprocessor_amp_phase(csi_matrix, no_frames, no_subcarriers, to_db = Fa
 #csi_excel(csi_matrix, no_frames, no_subcarriers, r"C:\Users\keng-tse\Desktop\test1-2.xlsx")
 
 #csi_preprocessor_amp_phase(csi_matrix, no_frames, no_subcarriers, False, False, True, True, r"C:\Users\keng-tse\Desktop\5p.xlsx")
+csi_preprocessor_phase(csi_matrix, no_frames, no_subcarriers, True, True, r"C:\Users\keng-tse\Desktop\0p.xlsx")
