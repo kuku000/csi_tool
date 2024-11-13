@@ -3,19 +3,21 @@ from reader import Csi_Reader
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
-csi_matrix, no_frames, no_subcarriers = Csi_Reader().get_csi_matrix(r"C:\Users\keng-tse\Desktop\nexmon_csi-master\utils\matlab\pc1023\1023pc_0.pcap", "original")
-#csi_matrix, no_frames, no_subcarriers = Csi_Reader().get_csi_matrix(r"C:\Users\keng-tse\Desktop\nexmon_csi-master\utils\matlab\test20241021_40MHz_no_ping.pcap", "phase")
-#csi_matrix = np.fft.fftshift(csi_matrix, axes=1)
-#print(csi_matrix.shape)
-#print(no_frames)
+import math
+#csi_matrix, no_frames, no_subcarriers = Csi_Reader().get_csi_matrix(r"C:\Users\keng-tse\Desktop\csi_tool\csi_dataset\peoplecounting\1107_under_all\1107_0.pcap", "original")
+csi_matrix, no_frames, no_subcarriers = Csi_Reader().get_csi_matrix(r"C:\Users\keng-tse\Desktop\nexmon_csi-master\utils\matlab\test1hz.pcap", "original")
+csi_matrix = np.fft.fftshift(csi_matrix, axes=1)
+# print(csi_matrix.shape)
+# print(no_frames)
 
 
 def csi_plot(csi_matrix, no_frames, no_subcarriers, type = "amp", to_db = False):
+    ##有誤
     csi_matrix = csi_matrix.reshape((no_frames, no_subcarriers))
     if type == 'phase':
         csi_matrix_real = np.unwrap(csi_matrix)
     else:
-        csi_matrix_real = abs(csi_matrix.real)
+        csi_matrix_real = abs(csi_matrix)
         if to_db == True:
             csi_matrix_real = csi_energy_in_db(csi_matrix_real)
     print(csi_matrix[0])
@@ -88,21 +90,27 @@ def csi_energy_in_db(csi_matrix):
 
 
 def csi_preprocessor_amp(csi_matrix, no_frames, no_subcarriers, to_db=False, remove_sub=True, save_as_xlsx=True, path=""):
+    # Reshape the CSI matrix to (no_frames, no_subcarriers)
     csi_matrix = csi_matrix.reshape((no_frames, no_subcarriers))
     
+    # Remove null and pilot subcarriers if needed
     if remove_sub:
         csi_matrix, no_subcarriers_process = remove_null_and_pilot(csi_matrix, no_frames, no_subcarriers)
     else:
         no_subcarriers_process = no_subcarriers  # If not removing subcarriers, use original count
 
-    csi_matrix_real = abs(csi_matrix.real)
+    # Calculate the magnitude (振幅) of the complex CSI matrix
+    csi_matrix_real = np.abs(csi_matrix) 
+    print("---------------")
+    print(math.sqrt(csi_matrix.real[0][0]**2 +csi_matrix.imag[0][0]**2))
     
+    # Convert to dB if needed
     if to_db:
         csi_matrix_real = csi_energy_in_db(csi_matrix_real)
 
-    #Remove rows where all values are zero
+    # Remove rows where all values are zero
     csi_matrix_real = csi_matrix_real[~(csi_matrix_real == 0).all(axis=1)]
-    no_frames = csi_matrix_real.shape[0]  # Update no_frames after removal
+    no_frames = csi_matrix_real.shape[0]  
     
     if save_as_xlsx:
         try:
@@ -111,6 +119,7 @@ def csi_preprocessor_amp(csi_matrix, no_frames, no_subcarriers, to_db=False, rem
             raise ValueError("Saving error") from e
 
     return csi_matrix_real
+
 
 def csi_preprocessor_phase(csi_matrix, no_frames, no_subcarriers, remove_sub=True, save_as_xlsx=True, path=""):
     csi_matrix = csi_matrix.reshape((no_frames, no_subcarriers))
@@ -186,11 +195,11 @@ def csi_preprocessor_amp_phase(csi_matrix, no_frames, no_subcarriers, to_db = Fa
     
 
 
-#vaild_csi = remove_null_and_pilot(csi_matrix, no_frames, no_subcarriers)
-#csi_plot(vaild_csi, no_frames, 108, "phase")
+vaild_csi, _ = remove_null_and_pilot(csi_matrix, no_frames, no_subcarriers)
+csi_plot(vaild_csi, no_frames, 234, "amp")
 
-#csi_plot(csi_matrix, no_frames, no_subcarriers)
-#csi_excel(csi_matrix, no_frames, no_subcarriers, r"C:\Users\keng-tse\Desktop\test1-2.xlsx")
-
-#csi_preprocessor_amp_phase(csi_matrix, no_frames, no_subcarriers, False, False, True, True, r"C:\Users\keng-tse\Desktop\5p.xlsx")
-csi_preprocessor_phase(csi_matrix, no_frames, no_subcarriers, True, True, r"C:\Users\keng-tse\Desktop\0p.xlsx")
+# #csi_plot(csi_matrix, no_frames, no_subcarriers)
+# #csi_excel(csi_matrix, no_frames, no_subcarriers, r"C:\Users\keng-tse\Desktop\test1-2.xlsx")
+#csi_preprocessor_amp(csi_matrix, no_frames, no_subcarriers, to_db=False, remove_sub=True, save_as_xlsx=True, path=r"C:\Users\keng-tse\Desktop\csi_tool\csi_dataset\peoplecounting\1107_phase\0p.xlsx")
+#csi_preprocessor_amp_phase(csi_matrix, no_frames, no_subcarriers, False, False, True, True, r"C:\Users\keng-tse\Desktop\csi_tool\csi_dataset\peoplecounting\1107_under_all\0p.xlsx")
+# #csi_preprocessor_phase(csi_matrix, no_frames, no_subcarriers, True, True, r"C:\Users\keng-tse\Desktop\0p.xlsx")

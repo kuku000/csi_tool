@@ -15,7 +15,7 @@ from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt 
 
 sys.path.append(r"c:\Users\keng-tse\Desktop\csi_tool") #這行為絕對路徑，如需使用，必須要修改為當前決路徑
-import csi_plot
+import csi_tool
 
 files_labels = {
     r"C:\Users\keng-tse\Desktop\csi_tool\csi_dataset\peoplecounting\1023_phase\0p.xlsx": 0,
@@ -65,7 +65,7 @@ def knn_classification(data, labels, n_neighbors= 3, upsample = True, min_max = 
 
 def preprocess_data(data):
     #將 CSI 能量轉換為 dB 並過濾無限大或無效值
-    data = csi_plot.csi_energy_in_db(data)
+    data = csi_tool.csi_energy_in_db(data)
     data = np.nan_to_num(data, nan=0.0, posinf=0.0, neginf=0.0)  #將 NaN 和無限大值轉為 0
     return data
 
@@ -90,31 +90,31 @@ data_scaled, labels = load_data(files_labels)
 #scaler = StandardScaler()
 #data_scaled = scaler.fit_transform(data)
 
-for i in range(1,48):
+for i in range(1):
 # PCA降維
-    n_components = i  # 要保留的主成分數量
-    pca = PCA(n_components=n_components)
-    data_pca = pca.fit_transform(data_scaled)
+    #n_components = i  # 要保留的主成分數量
+    #pca = PCA(n_components=n_components)
+    #data_pca = pca.fit_transform(data_scaled)
     #important_features = np.argmax(np.abs(pca.components_), axis=1)
 
 
     # KNN分類
-    X_train, X_test, y_train, y_test = train_test_split(data_pca, labels, test_size=0.3, random_state=2)
+    X_train, X_test, y_train, y_test = train_test_split(data_scaled, labels, test_size=0.3, random_state=2)
     smote = SMOTE()
     X_train, y_train = smote.fit_resample(X_train, y_train)
     #knn = KNeighborsClassifier(n_neighbors=)
     #knn.fit(X_train, y_train)
 
-    rf_model = RandomForestClassifier(n_estimators=200, random_state=42)
-    rf_model.fit(X_train, y_train)
+    #rf_model = RandomForestClassifier(n_estimators=200, random_state=42)
+    #rf_model.fit(X_train, y_train)
 
-    #xgb_model = XGBClassifier(eval_metric='mlogloss')
-    #xgb_model.fit(X_train, y_train)
+    xgb_model = XGBClassifier(eval_metric='mlogloss')
+    xgb_model.fit(X_train, y_train)
 
     # 預測
     #y_pred = knn.predict(X_test)
-    #y_pred = xgb_model.predict(X_test)
-    y_pred = rf_model.predict(X_test)
+    y_pred = xgb_model.predict(X_test)
+    #y_pred = rf_model.predict(X_test)
 
     # 混淆矩陣和準確率
     print("==========", i)
