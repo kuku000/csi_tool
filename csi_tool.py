@@ -194,7 +194,6 @@ def csi_preprocessor_amp_phase(csi_matrix, no_frames, no_subcarriers, to_db = Fa
     return csi_matrix_combined
     
 
-
 vaild_csi, _ = remove_null_and_pilot(csi_matrix, no_frames, no_subcarriers)
 csi_plot(vaild_csi, no_frames, 234, "amp")
 

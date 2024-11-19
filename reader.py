@@ -1,4 +1,4 @@
-from CSIKit.reader import get_reader
+from CSIKit.reader import get_reader, NEXBeamformReader
 from CSIKit.util import csitools
 import numpy as np
 class Csi_Reader():
@@ -33,6 +33,9 @@ class Csi_Reader():
             csi_matrix, no_frames, no_subcarriers = csitools.get_CSI(csi_data, "phase")
 
         return csi_matrix, no_frames, no_subcarriers
+    
+
+        
         
 
 
