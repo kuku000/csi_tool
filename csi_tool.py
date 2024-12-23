@@ -4,11 +4,53 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 import math
-#csi_matrix, no_frames, no_subcarriers = Csi_Reader().get_csi_matrix(r"C:\Users\keng-tse\Desktop\csi_tool\csi_dataset\peoplecounting\1107_under_all\1107_0.pcap", "original")
-csi_matrix, no_frames, no_subcarriers = Csi_Reader().get_csi_matrix(r"C:\Users\keng-tse\Desktop\nexmon_csi-master\utils\matlab\test1hz.pcap", "original")
-csi_matrix = np.fft.fftshift(csi_matrix, axes=1)
-# print(csi_matrix.shape)
+import openpyxl
+#csi_matrix, no_frames, no_subcarriers = Csi_Reader().get_csi_matrix(r"C:\Users\keng-tse\Desktop\csi_tool\csi_dataset\localization_phone\1123_phone\reference_point_13.pcap", "original")
+#csi_matrix, no_frames, no_subcarriers = Csi_Reader().get_csi_matrix(r"C:\Users\keng-tse\Desktop\nexmon_csi-master\utils\matlab\test1hz.pcap", "original")
+#csi_matrix = np.fft.fftshift(csi_matrix, axes=1)
+#print(csi_matrix.shape)
 # print(no_frames)
+#print(csi_matrix[499])
+
+def convert_cfr_to_cir(csi_matrix):
+    # 對每一幀應用 IFFT 得到 cir
+    cir_matrix = np.fft.ifft(csi_matrix, axis=1)
+    return cir_matrix
+
+def zero_out_subcarriers(csi_matrix, no_frames, no_subcarriers):
+    """
+    將指定的子載波（例如 NULL、PILOT 和 GUARD 子載波）設為零。
+
+    Args:
+        csi_matrix (numpy.ndarray): CFR (頻域) 矩陣，形狀為 (no_frames, no_subcarriers)。
+        no_frames (int): 幀數。
+        no_subcarriers (int): 子載波數量。
+
+    Returns:
+        numpy.ndarray: 子載波被設為零的 CSI 矩陣。
+    """
+    if no_subcarriers == 64:
+        bandwidth = "20MHz"
+    elif no_subcarriers == 128:
+        bandwidth = "40MHz"
+    elif no_subcarriers == 256:
+        bandwidth = "80MHz"
+    else:
+        raise ValueError("Unsupported subcarrier count. Supported values: 64, 128, 256.")
+
+    # 獲取需要設為零的子載波索引
+    null_subcarriers, pilot_subcarriers, _ = get_subcarrier_exclusions(bandwidth)
+    zero_indices = set(null_subcarriers + pilot_subcarriers)
+
+    # 建立零矩陣的副本
+    modified_csi = csi_matrix.copy()
+
+    # 將對應的子載波設為零
+    for frame_idx in range(no_frames):
+        for sub_idx in zero_indices:
+            modified_csi[frame_idx, sub_idx] = 0.0
+
+    return modified_csi
 
 
 def csi_plot(csi_matrix, no_frames, no_subcarriers, type = "amp", to_db = False):
@@ -82,11 +124,13 @@ def get_subcarrier_exclusions(bandwidth):
     else:
         raise ValueError("Unsupported bandwidth. Choose from '20MHz', '40MHz', or '80MHz'.")
     
-
 def csi_energy_in_db(csi_matrix):
     csi_energy = np.abs(csi_matrix)**2
     energy_db = 10 * np.log10(csi_energy)
+    energy_db = np.nan_to_num(energy_db, nan=0.0)
     return energy_db
+
+
 
 
 def csi_preprocessor_amp(csi_matrix, no_frames, no_subcarriers, to_db=False, remove_sub=True, save_as_xlsx=True, path=""):
@@ -149,7 +193,7 @@ def csi_preprocessor_phase(csi_matrix, no_frames, no_subcarriers, remove_sub=Tru
     return csi_matrix_phase
 
 
-def csi_preprocessor_amp_phase(csi_matrix, no_frames, no_subcarriers, to_db = False, scaler=True, remove_sub=True, save_as_xlsx=True, path=""):
+def csi_preprocessor_amp_phase(csi_matrix, no_frames, no_subcarriers, to_db = False, remove_sub=True, save_as_xlsx=True, path=""):
     #Reshape CSI matrix for processing
     csi_matrix = csi_matrix.reshape((no_frames, no_subcarriers))
     
@@ -176,10 +220,6 @@ def csi_preprocessor_amp_phase(csi_matrix, no_frames, no_subcarriers, to_db = Fa
     phase = phase[~(amp_copy == 0).all(axis=1)]  # Phase should match the amplitude rows
     no_frames = amplitude.shape[0]
 
-    if scaler:
-        scalers = StandardScaler()
-        amplitude = scalers.fit_transform(amplitude)
-
     #Concatenate amplitude and phase horizontally
     csi_matrix_combined = np.hstack((amplitude, phase))
     print(csi_matrix_combined.shape)
@@ -193,12 +233,58 @@ def csi_preprocessor_amp_phase(csi_matrix, no_frames, no_subcarriers, to_db = Fa
 
     return csi_matrix_combined
     
+def csi_preprocessor_amp_cfr_cir(csi_matrix, no_frames, no_subcarriers, to_db = False, remove_sub=True, save_as_xlsx=True, path=""):
+    csi_matrix = csi_matrix.reshape((no_frames, no_subcarriers))
+    zeroed_csi_matrix = zero_out_subcarriers(csi_matrix, no_frames, no_subcarriers)
+    
+    cfr_matrix = np.abs(csi_matrix)
+    cir_matrix = convert_cfr_to_cir(zeroed_csi_matrix)
+    cir_matrix = np.abs(cir_matrix)
 
-vaild_csi, _ = remove_null_and_pilot(csi_matrix, no_frames, no_subcarriers)
-csi_plot(vaild_csi, no_frames, 234, "amp")
+    if remove_sub:
+        cfr_matrix, no_subcarriers_process_amp = remove_null_and_pilot(cfr_matrix, no_frames, no_subcarriers)
+    
+    if to_db:
+        cfr_matrix = csi_energy_in_db(cfr_matrix)
+        cir_matrix = csi_energy_in_db(cir_matrix)
 
-# #csi_plot(csi_matrix, no_frames, no_subcarriers)
-# #csi_excel(csi_matrix, no_frames, no_subcarriers, r"C:\Users\keng-tse\Desktop\test1-2.xlsx")
-#csi_preprocessor_amp(csi_matrix, no_frames, no_subcarriers, to_db=False, remove_sub=True, save_as_xlsx=True, path=r"C:\Users\keng-tse\Desktop\csi_tool\csi_dataset\peoplecounting\1107_phase\0p.xlsx")
-#csi_preprocessor_amp_phase(csi_matrix, no_frames, no_subcarriers, False, False, True, True, r"C:\Users\keng-tse\Desktop\csi_tool\csi_dataset\peoplecounting\1107_under_all\0p.xlsx")
-# #csi_preprocessor_phase(csi_matrix, no_frames, no_subcarriers, True, True, r"C:\Users\keng-tse\Desktop\0p.xlsx")
+    # 找到全零封包
+    all_zero_mask = (cfr_matrix == 0).all(axis=1)
+    all_zero_indices = np.where(all_zero_mask)[0]
+
+    # 打印全零封包信息
+    if len(all_zero_indices) > 0:
+        print(f"全零封包的索引: {all_zero_indices}")
+    else:
+        print("沒有全零封包。")
+
+    # 移除全零封包
+    valid_rows = ~all_zero_mask
+    cfr_matrix = cfr_matrix[valid_rows]
+    cir_matrix = cir_matrix[valid_rows]
+    no_frames = cfr_matrix.shape[0]
+
+
+    csi_matrix_combined = np.hstack((cfr_matrix, cir_matrix))
+    print(csi_matrix_combined.shape)
+
+    if save_as_xlsx:
+        try:
+            csi_excel(csi_matrix_combined, no_frames, no_subcarriers_process_amp + no_subcarriers, path)
+        except Exception as e:
+            raise ValueError("Saving error") from e
+
+    return csi_matrix_combined
+
+    
+#csi_preprocessor_amp_phase(csi_matrix, no_frames, no_subcarriers, False, False, True, True, r"C:\Users\keng-tse\Desktop\0p.xlsx")
+
+
+# 將指定子載波設為零
+#zeroed_csi_matrix = zero_out_subcarriers(csi_matrix, no_frames, no_subcarriers)
+
+# 將處理後的矩陣轉換為 CIR
+#cir_matrix = convert_cfr_to_cir(zeroed_csi_matrix)
+
+# 可視化 CIR
+#csi_plot(cir_matrix, no_frames, no_subcarriers)
