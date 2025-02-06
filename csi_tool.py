@@ -165,7 +165,7 @@ def csi_preprocessor_amp(csi_matrix, no_frames, no_subcarriers, to_db=False, rem
     return csi_matrix_real
 
 
-def csi_preprocessor_phase(csi_matrix, no_frames, no_subcarriers, remove_sub=True, save_as_xlsx=True, path=""):
+def csi_preprocessor_phase(csi_matrix, no_frames, no_subcarriers, remove_sub= False, save_as_xlsx=True, unwrap = False, path=""):
     csi_matrix = csi_matrix.reshape((no_frames, no_subcarriers))
     
     if remove_sub:
@@ -180,7 +180,8 @@ def csi_preprocessor_phase(csi_matrix, no_frames, no_subcarriers, remove_sub=Tru
     csi_matrix_phase = csi_matrix_phase[~(csi_matrix_phase == 0).all(axis=1)]
     no_frames = csi_matrix_phase.shape[0]  # Update no_frames after removal
 
-    csi_matrix_phase = np.unwrap(csi_matrix_phase)
+    if unwrap:
+        csi_matrix_phase = np.unwrap(csi_matrix_phase)
 
 
     
@@ -193,14 +194,15 @@ def csi_preprocessor_phase(csi_matrix, no_frames, no_subcarriers, remove_sub=Tru
     return csi_matrix_phase
 
 
-def csi_preprocessor_amp_phase(csi_matrix, no_frames, no_subcarriers, to_db = False, remove_sub=True, save_as_xlsx=True, path=""):
+def csi_preprocessor_amp_phase(csi_matrix, no_frames, no_subcarriers, to_db = False, remove_sub=True, save_as_xlsx=True, unwrap = True, path=""):
     #Reshape CSI matrix for processing
     csi_matrix = csi_matrix.reshape((no_frames, no_subcarriers))
     
     #Split into amplitude and phase
     amplitude = np.abs(csi_matrix)
     phase = np.angle(csi_matrix)
-    phase = np.unwrap(phase)
+    if unwrap:
+        phase = np.unwrap(phase)
 
     #Remove NULL and PILOT subcarriers if required
     if remove_sub:

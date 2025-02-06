@@ -26,13 +26,13 @@ class Csi_Reader():
         #print(a.chipset)
       
         if csi_type == "original":
-            csi_matrix, no_frames, no_subcarriers = csitools.get_CSI(csi_data, "original")
+            csi_matrix, no_frames, no_subcarriers, timestamps = csitools.get_CSI(csi_data, "original")
         elif csi_type == "amplitude":
-            csi_matrix, no_frames, no_subcarriers = csitools.get_CSI(csi_data)
+            csi_matrix, no_frames, no_subcarriers, timestamps = csitools.get_CSI(csi_data)
         elif csi_type == "phase":
-            csi_matrix, no_frames, no_subcarriers = csitools.get_CSI(csi_data, "phase")
+            csi_matrix, no_frames, no_subcarriers, timestamps = csitools.get_CSI(csi_data, "phase")
 
-        return csi_matrix, no_frames, no_subcarriers
+        return csi_matrix, no_frames, no_subcarriers,timestamps
     
 
         
