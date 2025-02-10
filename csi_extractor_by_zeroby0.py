@@ -343,26 +343,26 @@ def read_pcap(pcap_filepath, bandwidth=0, nsamples_max=0):
         ),
         bandwidth
     ).csi.shape[1]
-import matplotlib.pyplot as plt
-if __name__ == "__main__":
-    samples, no_frames, subcarriers = read_pcap(r"C:\Users\keng-tse\Desktop\csi_tool\csi_dataset\localization_phone\1222_phone\5G\20Mhz\reference_point_1.pcap")
-    print(samples.fctl)
-    rssi = np.array(samples.rssi)
-    print(rssi.shape)
-    csi_matrix = np.fft.fftshift(samples.csi, axes=1)
-    amplitude = np.abs(samples.csi)
-    # amplitude, no_subcarriers_process_amp = csi_tool.remove_null_and_pilot(amplitude, 500, 64)
-    # def csi_plot(csi_matrix, no_frames, no_subcarriers, type = "amp"):
-    # ##有誤
-    #     csi_matrix = csi_matrix.reshape((no_frames, no_subcarriers))
-    #     if type == 'phase':
-    #         csi_matrix_real = np.unwrap(csi_matrix)
-    #     else:
-    #         csi_matrix_real = abs(csi_matrix)
-    #     print(csi_matrix[0])
-    #     print(csi_matrix.shape)
-    #     plt.figure()
-    #     for i in range(no_frames):
-    #         plt.plot(csi_matrix_real[i])
-    #     plt.show()
-    # csi_plot(amplitude,500,48)
+# import matplotlib.pyplot as plt
+# if __name__ == "__main__":
+#     samples, no_frames, subcarriers = read_pcap(r"C:\Users\keng-tse\Desktop\csi_tool\csi_dataset\localization_phone\1222_phone\5G\20Mhz\reference_point_1.pcap")
+#     print(samples.fctl)
+#     rssi = np.array(samples.rssi)
+#     print(rssi.shape)
+#     csi_matrix = np.fft.fftshift(samples.csi, axes=1)
+#     amplitude = np.abs(samples.csi)
+#     amplitude, no_subcarriers_process_amp = csi_tool.remove_null_and_pilot(amplitude, 500, 64)
+#     def csi_plot(csi_matrix, no_frames, no_subcarriers, type = "amp"):
+#     ##有誤
+#         csi_matrix = csi_matrix.reshape((no_frames, no_subcarriers))
+#         if type == 'phase':
+#             csi_matrix_real = np.unwrap(csi_matrix)
+#         else:
+#             csi_matrix_real = abs(csi_matrix)
+#         print(csi_matrix[0])
+#         print(csi_matrix.shape)
+#         plt.figure()
+#         for i in range(no_frames):
+#             plt.plot(csi_matrix_real[i])
+#         plt.show()
+#     csi_plot(amplitude,500,48)

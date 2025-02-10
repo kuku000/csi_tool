@@ -278,6 +278,53 @@ def csi_preprocessor_amp_cfr_cir(csi_matrix, no_frames, no_subcarriers, to_db = 
 
     return csi_matrix_combined
 
+
+def csi_preprocessor_all(csi_matrix, rssi, fctl, no_frames, no_subcarriers, to_db = False, remove_sub=True, save_as_xlsx=True, unwrap = True, path=""):
+    #Reshape CSI matrix for processing
+    csi_matrix = csi_matrix.reshape((no_frames, no_subcarriers))
+    rssi = rssi.reshape((no_frames,1))
+    fctl = fctl.reshape((no_frames,1))
+    #Split into amplitude and phase
+    amplitude = np.abs(csi_matrix)
+    phase = np.angle(csi_matrix)
+    if unwrap:
+        phase = np.unwrap(phase)
+
+    #Remove NULL and PILOT subcarriers if required
+    if remove_sub:
+        amplitude, no_subcarriers_process_amp = remove_null_and_pilot(amplitude, no_frames, no_subcarriers)
+        phase, no_subcarriers_process_phase = remove_null_and_pilot(phase, no_frames, no_subcarriers)
+    else:
+        no_subcarriers_process_amp = no_subcarriers
+        no_subcarriers_process_phase = no_subcarriers
+
+    #Convert amplitude to dB if needed
+    if to_db:
+        amplitude = csi_energy_in_db(amplitude)
+    
+    #Remove rows where all amplitude values are zero
+    amp_copy = amplitude.copy() 
+    amplitude = amplitude[~(amplitude == 0).all(axis=1)]
+    phase = phase[~(amp_copy == 0).all(axis=1)]
+    rssi = rssi[~(amp_copy == 0).all(axis=1)]
+    fctl = fctl[~(amp_copy == 0).all(axis=1)]
+    no_frames = amplitude.shape[0]
+
+    #Concatenate amplitude and phase horizontally
+    csi_matrix_combined = np.hstack((amplitude, phase, rssi, fctl))
+    print(csi_matrix_combined.shape)
+
+    #Save to Excel if required
+    if save_as_xlsx:
+        try:
+            csi_excel(csi_matrix_combined, no_frames, no_subcarriers_process_amp + no_subcarriers_process_phase + 2, path)
+        except Exception as e:
+            raise ValueError("Saving error") from e
+
+    return csi_matrix_combined
+
+
+
     
 #csi_preprocessor_amp_phase(csi_matrix, no_frames, no_subcarriers, False, False, True, True, r"C:\Users\keng-tse\Desktop\0p.xlsx")
 
