@@ -116,11 +116,11 @@ def correct_cfo_sfo2(phase_matrix):
     """
     num_packets, num_subcarriers = phase_matrix.shape
     corrected_phase = np.zeros_like(phase_matrix)
-    I = np.arange(-24, 24)  # 子載波索引（可根據實際數據調整範圍）
+    I = np.arange(-117, 117)  # 子載波索引（可根據實際數據調整範圍）
 
     for n in range(num_packets):
         # 平滑處理
-        theta_n = gaussian_filter(phase_matrix[n, :], sigma=1)
+        theta_n = gaussian_filter(phase_matrix[n, :], sigma= 0.1)
         #theta_n = phase_matrix[n,:]
         # 最小二平方估計一條由 SFO 和 CFO 造成的線性偏差
         a = np.sum(I * (theta_n - np.mean(theta_n))) / np.sum(I**2)

@@ -13,8 +13,8 @@ class TokenAndPositionEmbedding(nn.Module):
     def __init__(self, maxlen, embed_dim):
         super(TokenAndPositionEmbedding, self).__init__()
         self.token_embedding = nn.Linear(1, embed_dim)
-        self.token_cnn = nn.Conv1d(1, embed_dim, kernel_size=3, padding=1)
-        print("Using Conv1d as token embedding.")
+        # self.token_cnn = nn.Conv1d(1, embed_dim, kernel_size=3, padding=1)
+        # print("Using Conv1d as token embedding.")
         # 保持不變
         self.position_embedding = nn.Embedding(maxlen, embed_dim)
 
