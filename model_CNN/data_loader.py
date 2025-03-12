@@ -7,7 +7,7 @@ def load_data(reference_points):
     coord_labels = []  
 
     for path, (ref_id, coord) in reference_points.items():
-        df = pd.read_excel(path)
+        df = pd.read_excel(path, header=None)
         data.append(df.values)
         rp_labels.extend([ref_id] * len(df))
         coord_labels.extend([coord] * len(df))

@@ -18,3 +18,17 @@ class CSIDataset(Dataset):
 
     def __getitem__(self, idx):
         return self.amp_data[idx], self.labels[idx]
+
+
+
+class CSIRSSIDataset(Dataset):
+    def __init__(self, amp_data, rssi_data, labels):
+        self.amp_data = torch.tensor(amp_data, dtype=torch.float32)
+        self.rssi_data = torch.tensor(rssi_data, dtype=torch.float32)
+        self.labels = torch.tensor(labels, dtype=torch.float32)  # One-hot labels
+
+    def __len__(self):
+        return len(self.amp_data)
+
+    def __getitem__(self, idx):
+        return self.amp_data[idx], self.rssi_data[idx], self.labels[idx]
