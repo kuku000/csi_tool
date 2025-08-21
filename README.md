@@ -1,6 +1,7 @@
 # csi_tool
-wifi csi tool 
-
+NCKU EE MCSLab 113 wifi csi indoor fingerprint localization
+## Dataset Detail:
+https://github.com/NCKU-MCSLab/114-Kyle.git  
 ## folder (List only the useful parts)
 - **csi_dataset**:  
   - RSSI (floder): Raw RSSI data
@@ -41,7 +42,6 @@ wifi csi tool
 - **csi_extractor_by_zeroby0.py**: csi extractor by _zeroby0
 - **csi_tool.py (Old version code)**: some csi tool function (if just want to extract csi amp or phase, use data_extraction.py)
 - **reader.py (Old version code)**
--  
 
   
    
